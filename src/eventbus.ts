@@ -7,11 +7,14 @@ export type TFn<
   Ret = any
 > = (a: First) => TEventFn<Second[Key], Ret>;
 
+export interface Eventbus<T, TContext> {
+  dispatch: <TK extends keyof T>(key: TK, data: T[TK]) => this;
+  subscribe: <TK extends keyof T>(key: TK, fn: TFn<TK, TContext, T>) => this;
+  unsubscribe: <TK extends keyof T>(key: TK, fn: TFn) => this;
+}
+
 export class Eventbus<T, TContext> {
   constructor(public _context: TContext) {}
-
-  // no abble to be protected
-  // https://stackoverflow.com/questions/55242196/typescript-allows-to-use-proper-multiple-inheritance-with-mixins-but-fails-to-c#:~:text=exported%20anonymous%20classes%20can't,or%20protected%20hence%20the%20error.
 
   _subscribeSet: {[key: string]: Set<TFn>} = {};
 
