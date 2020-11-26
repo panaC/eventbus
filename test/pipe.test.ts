@@ -1,4 +1,5 @@
-import {deepStrictEqual, throws} from 'assert';
+import {deepStrictEqual} from 'assert';
+
 import {IPipe, pipe} from '../src/decorator/pipe';
 import {Eventbus} from '../src/eventbus';
 
