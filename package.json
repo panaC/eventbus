@@ -11,7 +11,7 @@
   "license": "MIT",
   "keywords": ["event bus"],
   "scripts": {
-    "test": "node build/test/*.test.js",
+    "test": "for TEST in ./build/test/*.test.js; do echo \"RUN $TEST\"; node $TEST; done",
     "lint": "gts lint",
     "clean": "gts clean",
     "compile": "tsc",
