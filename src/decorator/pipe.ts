@@ -34,7 +34,7 @@ export const pipe = <
           (vP, fn) => vP.then(v => Promise.resolve(fn(this._context)(v))),
           Promise.resolve(data)
         )),
-        constructor.prototype.dispatch.call(this, key, data),
+        super.dispatch(key, data),
         this
       );
     }
