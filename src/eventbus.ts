@@ -1,39 +1,46 @@
-export type TEventFn<Par = any, Ret = any> = (a: Par) => Ret;
-
 export type TFn<
   Key extends keyof Second = any,
   First = any,
   Second = any,
   Ret = any
-> = (a: First) => TEventFn<Second[Key], Ret>;
+> = (a: First) => (a: Second[Key]) => Ret;
 
-export interface Eventbus<T, TContext> {
-  dispatch: <TK extends keyof T>(key: TK, data: T[TK]) => this;
-  subscribe: <TK extends keyof T>(key: TK, fn: TFn<TK, TContext, T>) => this;
-  unsubscribe: <TK extends keyof T>(key: TK, fn: TFn) => this;
-}
+export type TMaybePromise<V> = V | Promise<V>;
+
+// export interface Eventbus<T, TContext> {
+// dispatch: <TK extends keyof T>(key: TK, data: TMaybePromise<T[TK]>) => this;
+// subscribe: <TK extends keyof T>(key: TK, fn: TFn<TK, TContext, T>) => this;
+// unsubscribe: <TK extends keyof T>(key: TK, fn: TFn) => this;
+// }
 
 export class Eventbus<T, TContext> {
   constructor(public _context: TContext) {}
 
-  _subscribeSet: {[key: string]: Set<TFn>} = {};
+  _subscribeSet: {[key in keyof T]?: Set<TFn>} = {};
 
-  public dispatch = <TK extends keyof T>(key: TK, data: T[TK]) => (
-    this._subscribeSet[key as string]?.forEach(fn => fn(this._context)(data)),
-    this
-  );
+  dispatch<TK extends keyof T>(key: TK, data: TMaybePromise<T[TK]>) {
+    return (
+      Promise.resolve(data).then(v =>
+        this._subscribeSet[key]?.forEach(fn => fn(this._context)(v))
+      ),
+      this
+    );
+  }
 
-  public subscribe = <TK extends keyof T>(
-    key: TK,
-    fn: TFn<TK, TContext, T>
-  ) => (
-    (this._subscribeSet[key as string] = (
-      this._subscribeSet[key as string] || new Set()
-    ).add(fn)),
-    this
-  );
+  subscribe<TK extends keyof T>(key: TK, fn: TFn<TK, TContext, T>) {
+    return (
+      (this._subscribeSet[key] = (this._subscribeSet[key] ?? new Set()).add(
+        fn
+      )),
+      this
+    );
+  }
 
-  public unsubscribe = <TK extends keyof T>(key: TK, fn: TFn) => (
-    this._subscribeSet[key as string]?.delete(fn), this
-  );
+  unsubscribe<TK extends keyof T>(key: TK, fn: TFn) {
+    return (
+      this._subscribeSet[key]?.delete(fn),
+      // this._subscribeSet[key] = this._subscribeSet[key]?.size ? this._subscribeSet[key] : undefined,
+      this
+    );
+  }
 }
