@@ -17,9 +17,9 @@ export const once = <
     }
 
     public once = <TK extends keyof T>(key: TK, fn: TFn<TK, TContext, T>) => (
-      this.subscribe(key, ctx => a =>
-        Promise.resolve(fn(ctx)(a)).then(() => this.unsubscribe(key, fn))
-      ),
+      fn = (ctx) => (a) => fn(ctx)(a),
+      this.subscribe(key, fn),
+      this.unsubscribe(key, fn),
       this
     );
   };
