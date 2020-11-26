@@ -20,7 +20,7 @@ const test = () => {
     const fn = (ctx: typeof context) => (test: string) => (
       deepStrictEqual(test, 'world'), deepStrictEqual(ctx, context)
     );
-    const q1 = ev.once('hello', fn)
+    const q1 = ev.once('hello', fn);
     const q2 = q1.dispatch('hello', 'world');
     const q3 = q2.dispatch('hello', 'should not subscribe');
 
@@ -28,10 +28,9 @@ const test = () => {
     deepStrictEqual(q2, q3);
     deepStrictEqual(q3, q1);
 
-    doesNotThrow(() => q1 === q3, "q1 != q3");
+    doesNotThrow(() => q1 === q3, 'q1 != q3');
 
-    deepStrictEqual(q1._subscribeSet["hello"], new Set());
-    
+    deepStrictEqual(q1._subscribeSet['hello'], new Set());
   }
 };
 
