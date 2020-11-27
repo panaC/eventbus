@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import {Container, ContainerWithImmer} from '../src/Container';
+import {Container, ContainerWithImmer, ContainerWithImmerAndGlobAccess} from '../src/Container';
 
 const test1 = () => {
   interface ITest {
@@ -231,3 +231,77 @@ const test3 = () => {
 };
 
 test3();
+
+const test4 = () => {
+  interface ITest {
+    hello?: { test: string };
+    world?: { test: string };
+    "hello/glob"?: string;
+  }
+  const test: ITest = {};
+
+  {
+    const c = new ContainerWithImmerAndGlobAccess<ITest, keyof ITest>(test);
+    {
+      c.set('hello', { test: "world"});
+      c.set('world', { test: 'hello'});
+      c.set("hello/glob", "hello world !");
+
+      const v1 = c.getDraft('hello');
+      const v2 = c.getDraft('world');
+
+      if (v1) {
+        v1.test = "immer";
+      }
+      if (v2) {
+        v2.test = "remmi";
+      }
+
+      assert.deepStrictEqual(v1?.test, 'immer');
+      assert.deepStrictEqual(v2?.test, 'remmi');
+
+      c.set('hello', v1);
+      c.set('world', v2);
+
+      const v31 = c.get('hello')?.test;
+      const v41 = c.get('world')?.test;
+
+      assert.deepStrictEqual(v31, 'immer');
+      assert.deepStrictEqual(v41, 'remmi');
+      
+      c.delete('world');
+
+      const v3 = c.get('hello')?.test;
+      const v4 = c.get('world')?.test;
+
+      assert.deepStrictEqual(v3, 'immer');
+      assert.deepStrictEqual(v4, undefined);
+
+      c.delete('hello');
+
+      const v5 = c.get('hello')?.test;
+      const v6 = c.get('world')?.test;
+
+      assert.deepStrictEqual(v5, undefined);
+      assert.deepStrictEqual(v6, undefined);
+    }
+    {
+      const res = c.getGlob("hello*");
+      assert.deepStrictEqual(res, { hello: undefined });
+      
+    }
+    {
+      const res = c.getGlob("**");
+      assert.deepStrictEqual(res, { hello: undefined, world: undefined, "hello/glob": 'hello world !'});
+
+    }
+    {
+      const res = c.getGlob("*");
+      assert.deepStrictEqual(res, { hello: undefined, world: undefined });
+
+    }
+
+  }
+};
+
+test4();
