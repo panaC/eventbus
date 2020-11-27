@@ -1,5 +1,9 @@
 import * as assert from 'assert';
-import {Container, ContainerWithImmer, ContainerWithImmerAndGlobAccess} from '../src/Container';
+import {
+  Container,
+  ContainerWithImmer,
+  ContainerWithImmerAndGlobAccess,
+} from '../src/Container';
 
 const test1 = () => {
   interface ITest {
@@ -66,7 +70,6 @@ const test1 = () => {
 };
 
 test1();
-
 
 const test2 = () => {
   interface ITest {
@@ -136,25 +139,25 @@ test2();
 
 const test3 = () => {
   interface ITest {
-    hello?: { test: string };
-    world?: { test: string };
+    hello?: {test: string};
+    world?: {test: string};
   }
   const test: ITest = {};
 
   {
     const c = new ContainerWithImmer<ITest, keyof ITest>(test);
     {
-      c.set('hello', { test: "world"});
-      c.set('world', { test: 'hello'});
+      c.set('hello', {test: 'world'});
+      c.set('world', {test: 'hello'});
 
       const v1 = c.getDraft('hello');
       const v2 = c.getDraft('world');
 
       if (v1) {
-        v1.test = "immer";
+        v1.test = 'immer';
       }
       if (v2) {
-        v2.test = "remmi";
+        v2.test = 'remmi';
       }
 
       assert.deepStrictEqual(v1?.test, 'immer');
@@ -168,7 +171,7 @@ const test3 = () => {
 
       assert.deepStrictEqual(v31, 'immer');
       assert.deepStrictEqual(v41, 'remmi');
-      
+
       c.delete('world');
 
       const v3 = c.get('hello')?.test;
@@ -186,17 +189,17 @@ const test3 = () => {
       assert.deepStrictEqual(v6, undefined);
     }
     {
-      c.set('hello', { test: "world"});
-      c.set('world', { test: 'hello'});
+      c.set('hello', {test: 'world'});
+      c.set('world', {test: 'hello'});
 
       const v1 = c.getDraft('hello');
       const v2 = c.getDraft('world');
 
       if (v1) {
-        v1.test = "immer";
+        v1.test = 'immer';
       }
       if (v2) {
-        v2.test = "remmi";
+        v2.test = 'remmi';
       }
 
       assert.deepStrictEqual(v1?.test, 'immer');
@@ -210,7 +213,7 @@ const test3 = () => {
 
       assert.deepStrictEqual(v31, 'immer');
       assert.deepStrictEqual(v41, 'remmi');
-      
+
       c.delete('world');
 
       const v3 = c.get('hello')?.test;
@@ -234,27 +237,27 @@ test3();
 
 const test4 = () => {
   interface ITest {
-    hello?: { test: string };
-    world?: { test: string };
-    "hello/glob"?: string;
+    hello?: {test: string};
+    world?: {test: string};
+    'hello/glob'?: string;
   }
   const test: ITest = {};
 
   {
     const c = new ContainerWithImmerAndGlobAccess<ITest, keyof ITest>(test);
     {
-      c.set('hello', { test: "world"});
-      c.set('world', { test: 'hello'});
-      c.set("hello/glob", "hello world !");
+      c.set('hello', {test: 'world'});
+      c.set('world', {test: 'hello'});
+      c.set('hello/glob', 'hello world !');
 
       const v1 = c.getDraft('hello');
       const v2 = c.getDraft('world');
 
       if (v1) {
-        v1.test = "immer";
+        v1.test = 'immer';
       }
       if (v2) {
-        v2.test = "remmi";
+        v2.test = 'remmi';
       }
 
       assert.deepStrictEqual(v1?.test, 'immer');
@@ -268,7 +271,7 @@ const test4 = () => {
 
       assert.deepStrictEqual(v31, 'immer');
       assert.deepStrictEqual(v41, 'remmi');
-      
+
       c.delete('world');
 
       const v3 = c.get('hello')?.test;
@@ -286,21 +289,21 @@ const test4 = () => {
       assert.deepStrictEqual(v6, undefined);
     }
     {
-      const res = c.getGlob("hello*");
-      assert.deepStrictEqual(res, { hello: undefined });
-      
+      const res = c.getGlob('hello*');
+      assert.deepStrictEqual(res, {hello: undefined});
     }
     {
-      const res = c.getGlob("**");
-      assert.deepStrictEqual(res, { hello: undefined, world: undefined, "hello/glob": 'hello world !'});
-
+      const res = c.getGlob('**');
+      assert.deepStrictEqual(res, {
+        hello: undefined,
+        world: undefined,
+        'hello/glob': 'hello world !',
+      });
     }
     {
-      const res = c.getGlob("*");
-      assert.deepStrictEqual(res, { hello: undefined, world: undefined });
-
+      const res = c.getGlob('*');
+      assert.deepStrictEqual(res, {hello: undefined, world: undefined});
     }
-
   }
 };
 
