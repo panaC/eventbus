@@ -13,13 +13,11 @@ export class Container<T extends TContainer> extends ContainerAbstract<T> {
 
   _containerKeyArray: string[] = [];
 
-  set<TK extends keyof T>(key: TK, data: Draft<T[TK]> | T[TK]) {
-    if (isDraft(data)) {
-      this._container[key] = finishDraft(data);
-    } else {
-      if (typeof key === "string") {
-        this._containerKeyArray.push(key);
-      }
+  set<TK extends keyof T>(key: TK, data: T[TK]) {
+    if (typeof key === "string") {
+      this._containerKeyArray.push(key);
+    }
+    if (this._container[key] !== data) {
       this._container[key] = Object.assign(data);
     }
   }
@@ -35,20 +33,48 @@ export class Container<T extends TContainer> extends ContainerAbstract<T> {
     }
   }
 
-  get<TK extends keyof T>(key: TK): Draft<T[TK]> | undefined {
+  get<TK extends keyof T>(key: TK) {
     const data = this._container[key];
-    return data ? createDraft(data as T[TK]) : undefined;
+    return data ? Object.seal(data as T[TK]) : undefined;
   }
-
 }
 
-export class ContainerWithGlobAccess<T extends TContainer> extends Container<T> {
+export class ContainerWithImmer<T extends TContainer> extends Container<T> {
   constructor(_container: T) { super(_container); }
 
-  getGlob<K extends keyof T>(key: string): {[key in K]?: Draft<T[K]>} {
-    const keys = micromatch(this._containerKeyArray, key) as Array<K>
-    const ret: {[key in K]?: Draft<T[K]>} = {};
+  set<TK extends keyof T>(key: TK, data: Draft<T[TK]> | T[TK]) {
+    if (isDraft(data)) {
+      this.set(key, finishDraft(data));
+    } else {
+      super.set(key, data as T[TK]);
+    }
+  }
+
+  getDraft<TK extends keyof T>(key: TK): Draft<T[TK]> | undefined {
+    const data = this.get(key);
+    return data ? createDraft(data as T[TK]) : undefined;
+  }
+}
+
+export class ContainerWithImmerAndGlobAccess<T extends TContainer> extends ContainerWithImmer<T> {
+  constructor(_container: T) { super(_container); }
+
+  _getKeys<TK extends keyof T>(key: string): Array<TK> {
+    const keys = micromatch(this._containerKeyArray, key) as Array<TK>;
+    return keys;
+  }
+
+  getGlob<TK extends keyof T>(key: string): {[key in TK]?: T[TK]} {
+    const keys = this._getKeys<TK>(key);
+    const ret: {[key in TK]?: T[TK]} = {};
     keys.forEach((k) => ret[k] = this.get(k));
+    return ret;
+  }
+
+  getGlobDraft<TK extends keyof T>(key: string): {[key in TK]?: Draft<T[TK]>} {
+    const keys = this._getKeys<TK>(key);
+    const ret: { [key in TK]?: Draft<T[TK]> } = {};
+    keys.forEach((k) => ret[k] = this.getDraft(k));
     return ret;
   }
 }
