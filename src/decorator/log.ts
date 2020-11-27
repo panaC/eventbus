@@ -1,11 +1,10 @@
-import {Eventbus, TFn} from '../eventbus';
 
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
 export const log = (log: (...a: any[]) => any) => <
-  TClass extends {new (...a: any[]): Eventbus<T, TContext>},
-  T,
-  TContext
+  TClass extends {new (...a: any[]): any},
+  // T,
+  // TContext
 >(
   constructor: TClass
 ) => {
