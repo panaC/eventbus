@@ -1,32 +1,43 @@
-import * as micromatch from "micromatch";
-import { createDraft, Draft, finishDraft, isDraft } from "immer"
-import { Objectish } from "immer/dist/internal";
+import * as micromatch from 'micromatch';
+import {createDraft, Draft, finishDraft, isDraft} from 'immer';
+import {Objectish} from 'immer/dist/internal';
 
-export type TContainer<V extends string, R extends Objectish> = { [key in V]?: R };
+export type TContainer<V extends string, R extends Objectish> = {
+  [key in V]?: R;
+};
 
-export abstract class ContainerAbstract<T extends TContainer<V, T[V]>, V extends string> {
+export abstract class ContainerAbstract<
+  T extends TContainer<V, T[V]>,
+  V extends string
+> {
   constructor(public _container: {[key in keyof T]?: T[key]} = {}) {}
 }
 
-export class Container<T extends TContainer<V, T[V]>, V extends string> extends ContainerAbstract<T, V> {
-  constructor(_container: T) { super(_container); }
+export class Container<
+  T extends TContainer<V, T[V]>,
+  V extends string
+> extends ContainerAbstract<T, V> {
+  constructor(_container: T) {
+    super(_container);
+  }
 
   _containerKeyArray: string[] = [];
 
   set<K extends V>(key: K, data: T[K]) {
-    if (typeof key === "string") {
+    if (typeof key === 'string') {
       this._containerKeyArray.push(key);
     }
     if (this._container[key] !== data) {
       const dataNotNull = data ? data : undefined;
-      const newData = typeof dataNotNull === "object" ? { ...dataNotNull } : dataNotNull;
+      const newData =
+        typeof dataNotNull === 'object' ? {...dataNotNull} : dataNotNull;
       this._container[key] = newData;
     }
   }
 
   delete<K extends V>(key: K) {
     delete this._container[key];
-    const index = this._containerKeyArray.findIndex((v) => v === key);
+    const index = this._containerKeyArray.findIndex(v => v === key);
     if (index > -1) {
       this._containerKeyArray = [
         ...this._containerKeyArray.slice(0, index),
@@ -41,8 +52,13 @@ export class Container<T extends TContainer<V, T[V]>, V extends string> extends 
   }
 }
 
-export class ContainerWithImmer<T extends TContainer<V, T[V]>, V extends string> extends Container<T, V> {
-  constructor(_container: T) { super(_container); }
+export class ContainerWithImmer<
+  T extends TContainer<V, T[V]>,
+  V extends string
+> extends Container<T, V> {
+  constructor(_container: T) {
+    super(_container);
+  }
 
   set<K extends V>(key: K, data: Draft<T[K]> | T[K]) {
     if (isDraft(data)) {
@@ -59,8 +75,13 @@ export class ContainerWithImmer<T extends TContainer<V, T[V]>, V extends string>
   }
 }
 
-export class ContainerWithImmerAndGlobAccess<T extends TContainer<V, T[V]>, V extends string> extends ContainerWithImmer<T, V> {
-  constructor(_container: T) { super(_container); }
+export class ContainerWithImmerAndGlobAccess<
+  T extends TContainer<V, T[V]>,
+  V extends string
+> extends ContainerWithImmer<T, V> {
+  constructor(_container: T) {
+    super(_container);
+  }
 
   _getKeys<K extends V>(key: string): Array<K> {
     const keys = micromatch(this._containerKeyArray, key) as Array<K>;
@@ -70,14 +91,14 @@ export class ContainerWithImmerAndGlobAccess<T extends TContainer<V, T[V]>, V ex
   getGlob<K extends V>(key: string): {[key in K]?: T[K]} {
     const keys = this._getKeys<K>(key);
     const ret: {[key in K]?: T[K]} = {};
-    keys.forEach((k) => ret[k] = this.get(k));
+    keys.forEach(k => (ret[k] = this.get(k)));
     return ret;
   }
 
   getGlobDraft<K extends V>(key: string): {[key in K]?: Draft<T[K]>} {
     const keys = this._getKeys<K>(key);
-    const ret: { [key in K]?: Draft<T[K]> } = {};
-    keys.forEach((k) => ret[k] = this.getDraft(k));
+    const ret: {[key in K]?: Draft<T[K]>} = {};
+    keys.forEach(k => (ret[k] = this.getDraft(k)));
     return ret;
   }
 }

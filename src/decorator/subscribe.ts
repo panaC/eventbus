@@ -27,7 +27,7 @@
 //     }
 
 //     unsubscribe<TK extends keyof T>(key: TK, fn: TFn) {
-      
+
 //       const data = this.get(key);
 //       data?.subscribeSet?.delete(fn);
 //       return this;
