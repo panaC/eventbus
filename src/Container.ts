@@ -2,27 +2,29 @@ import * as micromatch from "micromatch";
 import { createDraft, Draft, finishDraft, isDraft } from "immer"
 import { Objectish } from "immer/dist/internal";
 
-export type TContainer = { [key: string]: Objectish };
+export type TContainer<V extends string, R extends Objectish> = { [key in V]?: R };
 
-export abstract class ContainerAbstract<T extends TContainer> {
+export abstract class ContainerAbstract<T extends TContainer<V, T[V]>, V extends string> {
   constructor(public _container: {[key in keyof T]?: T[key]} = {}) {}
 }
 
-export class Container<T extends TContainer> extends ContainerAbstract<T> {
+export class Container<T extends TContainer<V, T[V]>, V extends string> extends ContainerAbstract<T, V> {
   constructor(_container: T) { super(_container); }
 
   _containerKeyArray: string[] = [];
 
-  set<TK extends keyof T>(key: TK, data: T[TK]) {
+  set<K extends V>(key: K, data: T[K]) {
     if (typeof key === "string") {
       this._containerKeyArray.push(key);
     }
     if (this._container[key] !== data) {
-      this._container[key] = Object.assign(data);
+      const dataNotNull = data ? data : undefined;
+      const newData = typeof dataNotNull === "object" ? { ...dataNotNull } : dataNotNull;
+      this._container[key] = newData;
     }
   }
 
-  delete<TK extends keyof T>(key: TK) {
+  delete<K extends V>(key: K) {
     delete this._container[key];
     const index = this._containerKeyArray.findIndex((v) => v === key);
     if (index > -1) {
@@ -33,47 +35,48 @@ export class Container<T extends TContainer> extends ContainerAbstract<T> {
     }
   }
 
-  get<TK extends keyof T>(key: TK) {
+  get<K extends V>(key: K) {
     const data = this._container[key];
-    return data ? Object.seal(data as T[TK]) : undefined;
+    return data ? Object.seal(data as T[K]) : undefined;
   }
 }
 
-export class ContainerWithImmer<T extends TContainer> extends Container<T> {
+export class ContainerWithImmer<T extends TContainer<V, T[V]>, V extends string> extends Container<T, V> {
   constructor(_container: T) { super(_container); }
 
-  set<TK extends keyof T>(key: TK, data: Draft<T[TK]> | T[TK]) {
+  set<K extends V>(key: K, data: Draft<T[K]> | T[K]) {
     if (isDraft(data)) {
       this.set(key, finishDraft(data));
     } else {
-      super.set(key, data as T[TK]);
+      super.set(key, data as T[K]);
     }
   }
 
-  getDraft<TK extends keyof T>(key: TK): Draft<T[TK]> | undefined {
-    const data = this.get(key);
-    return data ? createDraft(data as T[TK]) : undefined;
+  getDraft<K extends V>(key: K): Draft<T[K]> | undefined {
+    const data = this.get<K>(key);
+    const draftDataOrUndefined = data ? createDraft(data as T[K]) : undefined;
+    return draftDataOrUndefined;
   }
 }
 
-export class ContainerWithImmerAndGlobAccess<T extends TContainer> extends ContainerWithImmer<T> {
+export class ContainerWithImmerAndGlobAccess<T extends TContainer<V, T[V]>, V extends string> extends ContainerWithImmer<T, V> {
   constructor(_container: T) { super(_container); }
 
-  _getKeys<TK extends keyof T>(key: string): Array<TK> {
-    const keys = micromatch(this._containerKeyArray, key) as Array<TK>;
+  _getKeys<K extends V>(key: string): Array<K> {
+    const keys = micromatch(this._containerKeyArray, key) as Array<K>;
     return keys;
   }
 
-  getGlob<TK extends keyof T>(key: string): {[key in TK]?: T[TK]} {
-    const keys = this._getKeys<TK>(key);
-    const ret: {[key in TK]?: T[TK]} = {};
+  getGlob<K extends V>(key: string): {[key in K]?: T[K]} {
+    const keys = this._getKeys<K>(key);
+    const ret: {[key in K]?: T[K]} = {};
     keys.forEach((k) => ret[k] = this.get(k));
     return ret;
   }
 
-  getGlobDraft<TK extends keyof T>(key: string): {[key in TK]?: Draft<T[TK]>} {
-    const keys = this._getKeys<TK>(key);
-    const ret: { [key in TK]?: Draft<T[TK]> } = {};
+  getGlobDraft<K extends V>(key: string): {[key in K]?: Draft<T[K]>} {
+    const keys = this._getKeys<K>(key);
+    const ret: { [key in K]?: Draft<T[K]> } = {};
     keys.forEach((k) => ret[k] = this.getDraft(k));
     return ret;
   }
