@@ -10,7 +10,7 @@ export abstract class ContainerAbstract<
   T extends TContainer<V, T[V]>,
   V extends string
 > {
-  constructor(public _container: {[key in keyof T]?: T[key]} = {}) {}
+  constructor(public _container: TContainer<V, T[V]> = {}) {}
 }
 
 export class Container<
@@ -88,16 +88,16 @@ export class ContainerWithImmerAndGlobAccess<
     return keys;
   }
 
-  getGlob<K extends V>(key: string): {[key in K]?: T[K]} {
+  getGlob<K extends V>(key: string): TContainer<V, T[V]> {
     const keys = this._getKeys<K>(key);
-    const ret: {[key in K]?: T[K]} = {};
+    const ret: TContainer<V, T[V]> = {};
     keys.forEach(k => (ret[k] = this.get(k)));
     return ret;
   }
 
-  getGlobDraft<K extends V>(key: string): {[key in K]?: Draft<T[K]>} {
+  getGlobDraft<K extends V>(key: string): TContainer<V, Draft<T[V]>> {
     const keys = this._getKeys<K>(key);
-    const ret: {[key in K]?: Draft<T[K]>} = {};
+    const ret: TContainer<V, Draft<T[V]>> = {};
     keys.forEach(k => (ret[k] = this.getDraft(k)));
     return ret;
   }
