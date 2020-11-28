@@ -25,7 +25,7 @@ export class Container<
 
   set<K extends V>(key: K, data: T[K] | undefined) {
     if (!data) {
-      return ;
+      return;
     }
     if (typeof key === 'string') {
       this._containerKeyArray.push(key);
@@ -98,7 +98,10 @@ export class ContainerWithImmerAndGlobAccess<
     return ret;
   }
 
-  getGlobDraft<K extends V>(key: string, init: T[K]): TContainer<V, Draft<T[V]>> {
+  getGlobDraft<K extends V>(
+    key: string,
+    init: T[K]
+  ): TContainer<V, Draft<T[V]>> {
     const keys = this._getKeys<K>(key);
     const ret: TContainer<V, Draft<T[V]>> = {};
     keys.forEach(k => (ret[k] = this.getDraft(k, init)));
