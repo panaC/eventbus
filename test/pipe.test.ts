@@ -39,6 +39,7 @@ const test = () => {
         const fnPipe = (bus: MyColonne, data: string | undefined) => {
             console.log("PP", data);
             assert.deepStrictEqual(data, 'pipe ?')
+            assert.deepStrictEqual(bus, ev);
             return 'piped !';
         }
 

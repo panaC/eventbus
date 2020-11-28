@@ -48,8 +48,8 @@ export const eventEmitter = <
       console.log("EE dispatch", key, value);
       
       // run on next tick, but unsubscribed before !! 
+      const data = this.get(key);
       Promise.resolve(value).then(v => {
-        const data = this.get(key);
         if (data?.subscribeSet) {
           data.subscribeSet?.forEach(fn => fn(this, v));
         }
