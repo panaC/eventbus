@@ -45,9 +45,9 @@ export const eventEmitter = <
     }
 
     dispatch<TK extends V>(key: TK, value: TMaybePromise<U[TK]>) {
-      console.log("EE dispatch", key, value);
-      
-      // run on next tick, but unsubscribed before !! 
+      console.log('EE dispatch', key, value);
+
+      // run on next tick, but unsubscribed before !!
       const data = this.get(key);
       Promise.resolve(value).then(v => {
         if (data?.subscribeSet) {
@@ -59,8 +59,8 @@ export const eventEmitter = <
     }
 
     subscribe<TK extends V>(key: TK, fn: TFn) {
-      console.log("EE subscribe", key, fn);
-      
+      console.log('EE subscribe', key, fn);
+
       const data = this.getDraft(key, {} as T[TK]);
       if (data) {
         data.subscribeSet = (data.subscribeSet ?? new Set()).add(fn);
@@ -70,8 +70,7 @@ export const eventEmitter = <
     }
 
     unsubscribe<TK extends V>(key: TK, fn: TFn) {
-      console.log("EE unsubscribe", key, fn);
-      
+      console.log('EE unsubscribe', key, fn);
 
       const data = this.getDraft(key, {} as T[TK]);
       data?.subscribeSet?.delete(fn);

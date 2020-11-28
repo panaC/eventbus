@@ -1,4 +1,4 @@
-import { enableMapSet} from 'immer';
+import {enableMapSet} from 'immer';
 import {TContainer} from '../Container';
 import {Dispatch} from '../Dispatch';
 import {TFn, TMaybePromise} from '../type/fn.type';
@@ -20,10 +20,7 @@ export type TContainerWithPipe<V extends string, X = any> = {
   };
 };
 
-export interface IPipe<
-  T extends TContainer<V, T[V]>,
-  V extends string
-> {
+export interface IPipe<T extends TContainer<V, T[V]>, V extends string> {
   pipe: <TK extends V>(key: TK, fn: TFn<this, T[TK], T[TK]>) => this;
   unpipe: <TK extends V>(key: TK, fn: TFn) => this;
 }
@@ -44,20 +41,22 @@ export const pipe = <
     }
 
     dispatch<TK extends V>(key: TK, value: TMaybePromise<U[TK]>) {
+      console.log('PIPE dispatch', key, value);
 
-        console.log("PIPE dispatch", key, value);
-        
-        const data = this.get(key);
-        if (data?.pipeSet) {
-            value = Array.from(data.pipeSet).reduce((pv, fn) => pv.then(v => Promise.resolve(fn(this, v))), Promise.resolve(value));
-        }
+      const data = this.get(key);
+      if (data?.pipeSet) {
+        value = Array.from(data.pipeSet).reduce(
+          (pv, fn) => pv.then(v => Promise.resolve(fn(this, v))),
+          Promise.resolve(value)
+        );
+      }
 
       return super.dispatch(key, value);
     }
 
     pipe<TK extends V>(key: TK, fn: TFn) {
-        console.log("PIPE pipe", key, fn);
-        
+      console.log('PIPE pipe', key, fn);
+
       const data = this.getDraft(key, {} as T[TK]);
       if (data) {
         data.pipeSet = (data.pipeSet ?? new Set()).add(fn);
@@ -67,7 +66,7 @@ export const pipe = <
     }
 
     unpipe<TK extends V>(key: TK, fn: TFn) {
-        console.log("PIPE unpipe", key, fn);
+      console.log('PIPE unpipe', key, fn);
       const data = this.getDraft(key, {} as T[TK]);
       data?.pipeSet?.delete(fn);
       this.set(key, data);
