@@ -6,7 +6,9 @@ export abstract class Dispatch<
   T extends TContainer<V, T[V]>,
   V extends string
 > extends ContainerWithImmerAndGlobAccess<T, V> {
-  dispatch<TK extends V>(_key: TK, _data: TMaybePromise<U[TK]>) {
+  dispatch<TK extends V>(key: TK, value: TMaybePromise<U[TK]>) {
+    console.log("ABS dispatch", key, value);
+    
     return this;
   }
 }

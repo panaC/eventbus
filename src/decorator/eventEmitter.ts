@@ -45,15 +45,22 @@ export const eventEmitter = <
     }
 
     dispatch<TK extends V>(key: TK, value: TMaybePromise<U[TK]>) {
+      console.log("EE dispatch", key, value);
+      
+      // run on next tick, but unsubscribed before !! 
       Promise.resolve(value).then(v => {
-        const data = this.get(key) ?? ({} as IDataEventEmitter<U[TK]>); // force cast // how to infer it ?
-        data.subscribeSet?.forEach(fn => fn(this, v));
+        const data = this.get(key);
+        if (data?.subscribeSet) {
+          data.subscribeSet?.forEach(fn => fn(this, v));
+        }
       });
 
       return super.dispatch(key, value);
     }
 
     subscribe<TK extends V>(key: TK, fn: TFn) {
+      console.log("EE subscribe", key, fn);
+      
       const data = this.getDraft(key, {} as T[TK]);
       if (data) {
         data.subscribeSet = (data.subscribeSet ?? new Set()).add(fn);
@@ -63,6 +70,9 @@ export const eventEmitter = <
     }
 
     unsubscribe<TK extends V>(key: TK, fn: TFn) {
+      console.log("EE unsubscribe", key, fn);
+      
+
       const data = this.getDraft(key, {} as T[TK]);
       data?.subscribeSet?.delete(fn);
       this.set(key, data);

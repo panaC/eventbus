@@ -1,55 +1,77 @@
-// import {Eventbus, TFn, TMaybePromise} from '../Container';
+import { enableMapSet} from 'immer';
+import {TContainer} from '../Container';
+import {Dispatch} from '../Dispatch';
+import {TFn, TMaybePromise} from '../type/fn.type';
 
-// export interface IPipe<T, TContext> {
-//   pipe: <TK extends keyof T>(
-//     key: TK,
-//     fn: TFn<TK, TContext, T, TMaybePromise<T[TK]>>
-//   ) => this;
-//   unpipe: <TK extends keyof T>(key: TK, fn: TFn) => this;
-//   dispatch: <TK extends keyof T>(key: TK, data: TMaybePromise<T[TK]>) => this;
-// }
+// enable Map And Set in immer .. Not pure ! why ?
+enableMapSet();
 
-// export const pipe = <
-//   TClass extends {new (...a: any[]): Eventbus<T, TContext>},
-//   T,
-//   TContext
-// >(
-//   constructor: TClass
-// ) => {
-//   return class extends constructor {
-//     constructor(...a: any[]) {
-//       super(...a);
-//     }
+export interface IDataPipe<
+  // T extends TContainer<V, T[V]>,
+  // V extends string,
+  // K extends V
+  V
+> {
+  subscribeSet?: Set<TFn<any, V>>;
+}
+export type TContainerWithPipe<V extends string, X = any> = {
+  [Key in V]?: {
+    pipeSet?: Set<TFn<any, X, X>>; // how to remove second any : T[Key] doesn't works
+  };
+};
 
-//     _pipeSet: {
-//       [key in keyof T]?: Set<TFn<key, TContext, T, TMaybePromise<T[key]>>>;
-//     } = {};
+export interface IPipe<
+  T extends TContainer<V, T[V]>,
+  V extends string
+> {
+  pipe: <TK extends V>(key: TK, fn: TFn<this, T[TK], T[TK]>) => this;
+  unpipe: <TK extends V>(key: TK, fn: TFn) => this;
+}
 
-//     dispatch<TK extends keyof T>(key: TK, data: T[TK] | Promise<T[TK]>) {
-//       return (
-//         (data = Array.from(
-//           this._pipeSet[key] ??
-//             new Set<TFn<TK, TContext, T, TMaybePromise<T[TK]>>>()
-//         ).reduce(
-//           (vP, fn) => vP.then(v => Promise.resolve(fn(this._context)(v))),
-//           Promise.resolve(data)
-//         )),
-//         super.dispatch(key, data),
-//         this
-//       );
-//     }
+export const pipe = <
+  TClass extends {
+    new (...a: any[]): Dispatch<U, T, V>;
+  },
+  U extends TContainer<V, U[V]>,
+  T extends TContainerWithPipe<V>,
+  V extends string
+>(
+  constructor: TClass
+) => {
+  return class extends constructor {
+    constructor(...a: any[]) {
+      super(...a);
+    }
 
-//     pipe<TK extends keyof T>(
-//       key: TK,
-//       fn: TFn<TK, TContext, T, TMaybePromise<T[TK]>>
-//     ) {
-//       return (
-//         (this._pipeSet[key] = (this._pipeSet[key] ?? new Set()).add(fn)), this
-//       );
-//     }
+    dispatch<TK extends V>(key: TK, value: TMaybePromise<U[TK]>) {
 
-//     unpipe<TK extends keyof T>(key: TK, fn: TFn) {
-//       return this._pipeSet[key]?.delete(fn), this;
-//     }
-//   };
-// };
+        console.log("PIPE dispatch", key, value);
+        
+        const data = this.get(key);
+        if (data?.pipeSet) {
+            value = Array.from(data.pipeSet).reduce((pv, fn) => pv.then(v => Promise.resolve(fn(this, v))), Promise.resolve(value));
+        }
+
+      return super.dispatch(key, value);
+    }
+
+    pipe<TK extends V>(key: TK, fn: TFn) {
+        console.log("PIPE pipe", key, fn);
+        
+      const data = this.getDraft(key, {} as T[TK]);
+      if (data) {
+        data.pipeSet = (data.pipeSet ?? new Set()).add(fn);
+        this.set(key, data);
+      }
+      return this;
+    }
+
+    unpipe<TK extends V>(key: TK, fn: TFn) {
+        console.log("PIPE unpipe", key, fn);
+      const data = this.getDraft(key, {} as T[TK]);
+      data?.pipeSet?.delete(fn);
+      this.set(key, data);
+      return this;
+    }
+  };
+};

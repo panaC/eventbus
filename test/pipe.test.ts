@@ -1,43 +1,58 @@
-// import {deepStrictEqual} from 'assert';
+import { Dispatch } from '../src/Dispatch';
+import {
+    eventEmitter,
+    IEventEmitter,
+    TContainerWithEventEmitter,
+} from '../src/decorator/eventEmitter';
+import * as assert from 'assert';
+import { IPipe, pipe, TContainerWithPipe } from '../src/decorator/pipe';
 
-// import {IPipe, pipe} from '../src/decorator/pipe';
-// import {Eventbus} from '../src/Container';
+const test = () => {
+    {
+        interface ITest2 {
+            hello?: string;
+            world?: number;
+        }
 
-// const test = () => {
-//   {
-//     interface ITest1 {
-//       hello: string;
-//       world: number;
-//     }
-//     const context = {test: 123};
+        interface MyColonne
+            extends Dispatch<ITest2, TEventEmitter, keyof ITest2>,
+            IEventEmitter<ITest2, keyof ITest2>,
+            IPipe<ITest2, keyof ITest2> { }
 
-//     interface MyEventBus
-//       extends Eventbus<ITest1, typeof context>,
-//         IPipe<ITest1, typeof context> {}
+        type TEventEmitter = TContainerWithEventEmitter<keyof ITest2> & TContainerWithPipe<keyof ITest2>;
 
-//     @pipe
-//     class MyEventBus extends Eventbus<ITest1, typeof context> {}
-//     const ev = new MyEventBus(context);
-//     // const ev = new Pipe<ITest1, typeof context>(context);
+        @pipe
+        @eventEmitter
+        class MyColonne extends Dispatch<ITest2, TEventEmitter, keyof ITest2> { }
+        const ev = new MyColonne({});
 
-//     ev.pipe('hello', ctx => test => (
-//       deepStrictEqual(test, 'world'),
-//       deepStrictEqual(ctx, context),
-//       (test = 'piped'),
-//       test
-//     ))
-//       .pipe('hello', ctx => async test => (
-//         deepStrictEqual(test, 'piped'),
-//         deepStrictEqual(ctx, context),
-//         await new Promise<void>(res => setTimeout(() => res(), 500)),
-//         (test = 'awaited'),
-//         test
-//       ))
-//       .subscribe('hello', ctx => test => (
-//         deepStrictEqual(test, 'awaited'), deepStrictEqual(ctx, context)
-//       ))
-//       .dispatch('hello', 'world');
-//   }
-// };
+        const fn = (bus: any, data: any) => {
+            console.log('HELLO', data);
+            assert.deepStrictEqual('world', data);
+            assert.deepStrictEqual(bus, ev);
+        };
+        const fnPipeSub = (bus: any, data: any) => {
+            console.log('HELLO', data);
+            assert.deepStrictEqual('piped !', data);
+            assert.deepStrictEqual(bus, ev);
+        };
+        const fnPipe = (bus: MyColonne, data: string | undefined) => {
+            console.log("PP", data);
+            assert.deepStrictEqual(data, 'pipe ?')
+            return 'piped !';
+        }
 
-// test();
+        ev.subscribe('hello', fn)
+            .dispatch('hello', 'world')
+            .unsubscribe('hello', fn)
+            .dispatch('hello', 'should not subscribe')
+            .pipe('hello', fnPipe)
+            .subscribe('hello', fnPipeSub)
+            .dispatch('hello', "pipe ?")
+            .unpipe('hello', fnPipe)
+            .unsubscribe('hello', fnPipeSub)
+            .dispatch('hello', 'should not subscribe and pipe')
+    }
+};
+
+test();
