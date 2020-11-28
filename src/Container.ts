@@ -1,6 +1,6 @@
 import * as micromatch from 'micromatch';
 import {createDraft, Draft, finishDraft, isDraft} from 'immer';
-import {Objectish} from 'immer/dist/internal';
+import {Objectish, WritableDraft} from 'immer/dist/internal';
 
 export type TContainer<V extends string, R extends Objectish> = {
   [key in V]?: R;
@@ -23,7 +23,10 @@ export class Container<
 
   _containerKeyArray: string[] = [];
 
-  set<K extends V>(key: K, data: T[K]) {
+  set<K extends V>(key: K, data: T[K] | undefined) {
+    if (!data) {
+      return ;
+    }
     if (typeof key === 'string') {
       this._containerKeyArray.push(key);
     }
@@ -60,18 +63,18 @@ export class ContainerWithImmer<
     super(_container);
   }
 
-  set<K extends V>(key: K, data: Draft<T[K]> | T[K]) {
+  set<K extends V>(key: K, data: Draft<T[K]> | T[K] | undefined) {
     if (isDraft(data)) {
       this.set(key, finishDraft(data));
     } else {
-      super.set(key, data as T[K]);
+      super.set(key, data as T[K] | undefined);
     }
   }
 
-  getDraft<K extends V>(key: K): Draft<T[K]> | undefined {
+  getDraft<K extends V>(key: K, init: T[K]) {
     const data = this.get<K>(key);
-    const draftDataOrUndefined = data ? createDraft(data as T[K]) : undefined;
-    return draftDataOrUndefined;
+    const draftData = data ? createDraft(data as T[K]) : createDraft(init);
+    return draftData;
   }
 }
 
@@ -95,10 +98,10 @@ export class ContainerWithImmerAndGlobAccess<
     return ret;
   }
 
-  getGlobDraft<K extends V>(key: string): TContainer<V, Draft<T[V]>> {
+  getGlobDraft<K extends V>(key: string, init: T[K]): TContainer<V, Draft<T[V]>> {
     const keys = this._getKeys<K>(key);
     const ret: TContainer<V, Draft<T[V]>> = {};
-    keys.forEach(k => (ret[k] = this.getDraft(k)));
+    keys.forEach(k => (ret[k] = this.getDraft(k, init)));
     return ret;
   }
 }

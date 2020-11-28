@@ -150,8 +150,8 @@ const test3 = () => {
       c.set('hello', {test: 'world'});
       c.set('world', {test: 'hello'});
 
-      const v1 = c.getDraft('hello');
-      const v2 = c.getDraft('world');
+      const v1 = c.getDraft('hello', {test: ''});
+      const v2 = c.getDraft('world', {test: ''});
 
       if (v1) {
         v1.test = 'immer';
@@ -192,8 +192,8 @@ const test3 = () => {
       c.set('hello', {test: 'world'});
       c.set('world', {test: 'hello'});
 
-      const v1 = c.getDraft('hello');
-      const v2 = c.getDraft('world');
+      const v1 = c.getDraft('hello', {test: ''});
+      const v2 = c.getDraft('world', {test: ''});
 
       if (v1) {
         v1.test = 'immer';
@@ -250,8 +250,8 @@ const test4 = () => {
       c.set('world', {test: 'hello'});
       c.set('hello/glob', 'hello world !');
 
-      const v1 = c.getDraft('hello');
-      const v2 = c.getDraft('world');
+      const v1 = c.getDraft('hello', {test: ''});
+      const v2 = c.getDraft('world', {test: ''});
 
       if (v1) {
         v1.test = 'immer';
