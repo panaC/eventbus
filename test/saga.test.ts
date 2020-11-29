@@ -38,7 +38,7 @@ const test = () => {
 
       while (1) {
         yield take('hello');
-        console.log('hello TAKED in SAGA');
+        console.log('hello TAKEN in SAGA');
       }
     });
 
