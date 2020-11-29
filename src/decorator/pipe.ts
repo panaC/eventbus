@@ -55,8 +55,8 @@ export const pipe = <
 
         return super.dispatch(key, value);
       } catch (e) {
-        console.log("ERROR PIPE", e);
-        
+        console.log('ERROR PIPE', e);
+
         return this;
       }
     }
