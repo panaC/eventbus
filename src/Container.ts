@@ -1,8 +1,8 @@
 import * as micromatch from 'micromatch';
 import {createDraft, Draft, finishDraft, isDraft} from 'immer';
-import {Objectish, WritableDraft} from 'immer/dist/internal';
+import {Objectish} from 'immer/dist/internal';
 
-export type TContainer<V extends string, R extends Objectish> = {
+export type TContainer<V extends string, R extends Objectish = Objectish> = {
   [key in V]?: R;
 };
 

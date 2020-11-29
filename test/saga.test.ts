@@ -5,8 +5,8 @@ import {
   TContainerWithEventEmitter,
 } from '../src/decorator/eventEmitter';
 import * as assert from 'assert';
-import { ISaga, saga } from '../src/decorator/saga';
-import { take } from 'redux-saga/effects';
+import {ISaga, saga} from '../src/decorator/saga';
+import {take} from 'redux-saga/effects';
 
 const test = () => {
   {
@@ -33,15 +33,13 @@ const test = () => {
       assert.deepStrictEqual(bus, ev);
     };
 
-    ev.runSaga(function*() {
-      console.log('HELLO WORLD IT\'s ME SAGA');
+    ev.runSaga(function* () {
+      console.log("HELLO WORLD IT's ME SAGA");
 
       while (1) {
-        yield take("hello");
-        console.log("hello TAKED in SAGA");
-
+        yield take('hello');
+        console.log('hello TAKED in SAGA');
       }
-      
     });
 
     ev.subscribe('hello', fn)
