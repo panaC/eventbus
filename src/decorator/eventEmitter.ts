@@ -1,5 +1,4 @@
-import {createDraft, enableMapSet} from 'immer';
-import {Draft, Drafted} from 'immer/dist/internal';
+import {enableMapSet} from 'immer';
 import {TContainer} from '../Container';
 import {Dispatch} from '../Dispatch';
 import {TFn, TMaybePromise} from '../type/fn.type';
@@ -69,6 +68,13 @@ export const eventEmitter = <
       return this;
     }
 
+    subscribeGlob(key: string, fn: TFn) {
+      const container = this.getGlob(key);
+      Object.keys(container).forEach(key => this.subscribe(key as V, fn));
+
+      return this;
+    }
+
     unsubscribe<TK extends V>(key: TK, fn: TFn) {
       console.log('EE unsubscribe', key, fn);
 
@@ -76,7 +82,14 @@ export const eventEmitter = <
       data?.subscribeSet?.delete(fn);
       this.set(key, data);
       return this;
-      // this._subscribeSet[key] = this._subscribeSet[key]?.size ? this._subscribeSet[key] : undefined,
+    }
+
+    unsubscribeWithoutKey(fn: TFn) {
+      const container = this.getGlob('**');
+
+      Object.keys(container).forEach(key => this.unsubscribe(key as V, fn));
+
+      return this;
     }
   };
 };
