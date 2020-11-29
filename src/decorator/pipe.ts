@@ -44,14 +44,21 @@ export const pipe = <
       console.log('PIPE dispatch', key, value);
 
       const data = this.get(key);
-      if (data?.pipeSet) {
-        value = Array.from(data.pipeSet).reduce(
-          (pv, fn) => pv.then(v => Promise.resolve(fn(this, v))),
-          Promise.resolve(value)
-        );
-      }
 
-      return super.dispatch(key, value);
+      try {
+        if (data?.pipeSet) {
+          value = Array.from(data.pipeSet).reduce(
+            (pv, fn) => pv.then(v => Promise.resolve(fn(this, v))),
+            Promise.resolve(value)
+          );
+        }
+
+        return super.dispatch(key, value);
+      } catch (e) {
+        console.log("ERROR PIPE", e);
+        
+        return this;
+      }
     }
 
     pipe<TK extends V>(key: TK, fn: TFn) {
