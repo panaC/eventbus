@@ -1,6 +1,7 @@
 import * as micromatch from 'micromatch';
 import {createDraft, Draft, finishDraft, isDraft} from 'immer';
 import {Objectish} from 'immer/dist/internal';
+import {TMaybePromise} from './type/fn.type';
 
 export type TContainer<V extends string, R extends Objectish = Objectish> = {
   [key in V]?: R;
@@ -42,10 +43,7 @@ export class Container<
     delete this._container[key];
     const index = this._containerKeyArray.findIndex(v => v === key);
     if (index > -1) {
-      this._containerKeyArray = [
-        ...this._containerKeyArray.slice(0, index),
-        ...this._containerKeyArray.slice(index, this._containerKeyArray.length),
-      ];
+      this._containerKeyArray.splice(index >>> 0, 1);
     }
   }
 
@@ -106,5 +104,39 @@ export class ContainerWithImmerAndGlobAccess<
     const ret: TContainer<V, Draft<T[V]>> = {};
     keys.forEach(k => (ret[k] = this.getDraft(k, init)));
     return ret;
+  }
+}
+
+export type TContainerWithStore<
+  U extends TContainer<V, U[V]>,
+  V extends string
+> = {
+  [Key in V]?: {
+    data?: U[Key];
+  };
+};
+
+export class ContainerWithImmerAndGlobAccessAndDispatch<
+  U extends TContainer<V, U[V]>,
+  T extends TContainerWithStore<U, V>,
+  V extends string
+> extends ContainerWithImmerAndGlobAccess<T, V> {
+  constructor(_container: T) {
+    super(_container);
+  }
+
+  dispatch<TK extends V>(key: TK, value: TMaybePromise<U[TK]>) {
+    console.log('EE dispatch', key, value);
+
+    // run on next tick for non promisable value
+    Promise.resolve(value).then(v => {
+      const data = this.getDraft(key, {data: undefined} as T[TK]);
+      if (data) {
+        data.data = v as Draft<U[TK]>;
+        this.set(key, data);
+      }
+    });
+
+    return this;
   }
 }

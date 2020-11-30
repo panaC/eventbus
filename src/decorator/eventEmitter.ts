@@ -1,6 +1,9 @@
 import {enableMapSet} from 'immer';
-import {TContainer} from '../Container';
-import {Dispatch} from '../Dispatch';
+import {
+  ContainerWithImmerAndGlobAccessAndDispatch,
+  TContainer,
+  TContainerWithStore,
+} from '../Container';
 import {TFn, TMaybePromise} from '../type/fn.type';
 
 // enable Map And Set in immer .. Not pure ! why ?
@@ -21,19 +24,22 @@ export type TContainerWithEventEmitter<V extends string> = {
 };
 
 export interface IEventEmitter<
-  T extends TContainer<V, T[V]>,
+  U extends TContainer<V, U[V]>,
   V extends string
 > {
-  subscribe: <TK extends V>(key: TK, fn: TFn<this, T[TK]>) => this;
+  dispatch: <TK extends V>(key: TK, value: TMaybePromise<U[TK]>) => this;
+  subscribe: <TK extends V>(key: TK, fn: TFn<this, U[TK]>) => this;
   unsubscribe: <TK extends V>(key: TK, fn: TFn) => this;
+  subscribeGlob: (key: string, fn: TFn) => this;
+  unsubscribeWithoutKey: (fn: TFn) => this;
 }
 
 export const eventEmitter = <
   TClass extends {
-    new (...a: any[]): Dispatch<U, T, V>;
+    new (...a: any[]): ContainerWithImmerAndGlobAccessAndDispatch<U, T, V>;
   },
   U extends TContainer<V, U[V]>,
-  T extends TContainerWithEventEmitter<V>,
+  T extends TContainerWithEventEmitter<V> & TContainerWithStore<U, V>,
   V extends string
 >(
   constructor: TClass

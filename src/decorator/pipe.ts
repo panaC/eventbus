@@ -1,6 +1,9 @@
 import {enableMapSet} from 'immer';
-import {TContainer} from '../Container';
-import {Dispatch} from '../Dispatch';
+import {
+  ContainerWithImmerAndGlobAccessAndDispatch,
+  TContainer,
+  TContainerWithStore,
+} from '../Container';
 import {TFn, TMaybePromise} from '../type/fn.type';
 
 // enable Map And Set in immer .. Not pure ! why ?
@@ -27,10 +30,10 @@ export interface IPipe<T extends TContainer<V, T[V]>, V extends string> {
 
 export const pipe = <
   TClass extends {
-    new (...a: any[]): Dispatch<U, T, V>;
+    new (...a: any[]): ContainerWithImmerAndGlobAccessAndDispatch<U, T, V>;
   },
   U extends TContainer<V, U[V]>,
-  T extends TContainerWithPipe<V>,
+  T extends TContainerWithPipe<V> & TContainerWithStore<U, V>,
   V extends string
 >(
   constructor: TClass

@@ -3,6 +3,8 @@ import {
   Container,
   ContainerWithImmer,
   ContainerWithImmerAndGlobAccess,
+  ContainerWithImmerAndGlobAccessAndDispatch,
+  TContainerWithStore,
 } from '../src/Container';
 
 const test1 = () => {
@@ -308,3 +310,32 @@ const test4 = () => {
 };
 
 test4();
+
+const test5 = () => {
+  interface ITest {
+    hello?: string;
+    world?: number;
+    'hello/glob'?: string;
+  }
+  const test: ITest = {};
+
+  {
+    const c = new ContainerWithImmerAndGlobAccessAndDispatch<
+      ITest,
+      TContainerWithStore<ITest, keyof ITest>,
+      keyof ITest
+    >({});
+
+    c.dispatch('hello', 'world');
+
+    const state = c.get('hello')?.data;
+    assert.deepStrictEqual(undefined, state);
+
+    setImmediate(() => {
+      const state = c.get('hello')?.data;
+      assert.deepStrictEqual('world', state);
+    });
+  }
+};
+
+test5();

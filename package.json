@@ -1,7 +1,7 @@
 {
-  "name": "eventbus",
-  "version": "0.0.1",
-  "description": "event bus",
+  "name": "mediator.ts",
+  "version": "1.0.0",
+  "description": "mediator design pattern in typescript with some decorator",
   "author": "Pierre Leroux",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
@@ -10,7 +10,7 @@
   ],
   "license": "MIT",
   "keywords": [
-    "event bus"
+    "eventEmitter", "eventBus", "mediator"
   ],
   "scripts": {
     "test": "for TEST in ./build/test/*.test.js; do echo \"RUN $TEST\"; node $TEST; done",

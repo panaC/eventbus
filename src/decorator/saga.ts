@@ -1,7 +1,10 @@
-import {TContainer} from '../Container';
+import {
+  ContainerWithImmerAndGlobAccessAndDispatch,
+  TContainer,
+  TContainerWithStore,
+} from '../Container';
 import createSagaMiddleware, {SagaMiddleware} from 'redux-saga';
 import {TMaybePromise} from '../type/fn.type';
-import {Dispatch} from '../Dispatch';
 
 export interface ISaga {
   runSaga: SagaMiddleware['run'];
@@ -9,10 +12,10 @@ export interface ISaga {
 
 export const saga = <
   TClass extends {
-    new (...a: any[]): Dispatch<T, U, V>;
+    new (...a: any[]): ContainerWithImmerAndGlobAccessAndDispatch<U, T, V>;
   },
-  T extends TContainer<V>,
-  U extends TContainer<V>,
+  U extends TContainer<V, U[V]>,
+  T extends TContainerWithStore<U, V>,
   V extends string
 >(
   constructor: TClass
@@ -30,12 +33,12 @@ export const saga = <
         this.dispatch(type as V, actionValue);
         return action;
       },
-      getState: () => this.get,
+      getState: () => <K extends V>(key: K) => this.get(key)?.data,
     });
 
     runSaga = this._sagaMiddleware.run;
 
-    dispatch<TK extends V>(key: TK, value: TMaybePromise<T[TK]>) {
+    dispatch<TK extends V>(key: TK, value: TMaybePromise<U[TK]>) {
       this._sagaMiddlewareDispatch(action => {
         super.dispatch(key, value);
         return action;

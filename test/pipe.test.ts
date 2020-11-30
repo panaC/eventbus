@@ -1,4 +1,3 @@
-import {Dispatch} from '../src/Dispatch';
 import {
   eventEmitter,
   IEventEmitter,
@@ -6,6 +5,10 @@ import {
 } from '../src/decorator/eventEmitter';
 import * as assert from 'assert';
 import {IPipe, pipe, TContainerWithPipe} from '../src/decorator/pipe';
+import {
+  ContainerWithImmerAndGlobAccessAndDispatch,
+  TContainerWithStore,
+} from '../src/Container';
 
 const test = () => {
   {
@@ -15,16 +18,25 @@ const test = () => {
     }
 
     interface MyColonne
-      extends Dispatch<ITest2, TEventEmitter, keyof ITest2>,
+      extends ContainerWithImmerAndGlobAccessAndDispatch<
+          ITest2,
+          TEventEmitter,
+          keyof ITest2
+        >,
         IEventEmitter<ITest2, keyof ITest2>,
         IPipe<ITest2, keyof ITest2> {}
 
     type TEventEmitter = TContainerWithEventEmitter<keyof ITest2> &
-      TContainerWithPipe<keyof ITest2>;
+      TContainerWithPipe<keyof ITest2> &
+      TContainerWithStore<ITest2, keyof ITest2>;
 
     @pipe
     @eventEmitter
-    class MyColonne extends Dispatch<ITest2, TEventEmitter, keyof ITest2> {}
+    class MyColonne extends ContainerWithImmerAndGlobAccessAndDispatch<
+      ITest2,
+      TEventEmitter,
+      keyof ITest2
+    > {}
     const ev = new MyColonne({});
 
     const fn = (bus: any, data: any) => {
